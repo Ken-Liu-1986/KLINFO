@@ -197,4 +197,93 @@
 
     <div class="main-container">
         <nav class="nav-panel">
-            <div class="nav-item" url="PermissionManager/ind
+            <div class="nav-item" url="PermissionManager/index.html">👤 角色权限管理</div>
+            <div class="nav-item">📋 健康问卷管理</div>
+            <div class="nav-item">❓ 问题管理</div>
+            <div class="nav-item">⚙️ 规则管理</div>
+            <div class="nav-item">📚 数据字典</div>
+            <div class="nav-item">📖 操作日志</div>
+        </nav>
+
+        <div class="tab-container">
+            <div class="tab-bar" id="tabBar"></div>
+            <div class="content-area" id="contentArea"></div>
+        </div>
+    </div>
+
+    <script>
+        const tabMap = new Map(); // 存储模块与标签页的映射关系[3,4](@ref)
+        let activeTab = null;
+
+        document.querySelectorAll('.nav-item').forEach(nav => {
+            nav.addEventListener('click', function() {
+                const moduleName = this.textContent.trim();
+                const existingTab = tabMap.get(moduleName);
+
+                // 移除所有导航激活状态[1,4](@ref)
+                document.querySelectorAll('.nav-item').forEach(item => 
+                    item.classList.remove('active'));
+                this.classList.add('active');
+
+                document.querySelectorAll('.tab').forEach(t => 
+                        t.classList.remove('active'));
+                var url=nav.getAttribute("url");
+                if (existingTab) {
+                    
+                    // 激活已有标签页[6](@ref)
+                    
+                    existingTab.tabElement.classList.add('active');
+                    
+                    document.querySelectorAll('.tab-content').forEach(c => 
+                        c.classList.remove('active'));
+                    existingTab.contentElement.classList.add('active');
+                } else {
+                    // 创建新标签页[3,5](@ref)
+                    const tab = document.createElement('div');
+                    tab.className = 'tab active';
+                    tab.innerHTML = `
+                        ${moduleName}
+                        <div class="tab-close">×</div>
+                    `;
+
+                    const content = document.createElement('div');
+                    content.className = 'tab-content active';
+                    content.innerHTML = '<iframe src="'+url+'" ></iframe>';
+
+                    // 存储状态[6](@ref)
+                    tabMap.set(moduleName, {
+                        tabElement: tab,
+                        contentElement: content
+                    });
+
+                    // 关闭逻辑[7](@ref)
+                    tab.querySelector('.tab-close').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        tabMap.delete(moduleName);
+                        tab.remove();
+                        content.remove();
+                        if (activeTab === tab) {
+                            activeTab = null;
+                        }
+                    });
+
+                    // 标签激活逻辑[4](@ref)
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.tab').forEach(t =>{
+                            t.classList.remove('active')
+                        });
+                        tab.classList.add('active');
+                        activeTab = tab;
+                    });
+
+                    // 插入DOM
+                    document.getElementById('tabBar').appendChild(tab);
+                    document.getElementById('contentArea').appendChild(content);
+
+                 
+                }
+            });
+        });
+    </script>
+</body>
+</html>

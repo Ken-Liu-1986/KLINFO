@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSBC智能核保系统</title>
+    <style>
+        :root {
+            --hsbc-red: #DB0011;
+            --hsbc-navy: #002395;
+            --hsbc-stripe: rgba(219,0,17,0.05);
+            --chrome-blue: #4285f4;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'HSBC Text', Arial, sans-serif;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--hsbc-stripe),
+                var(--hsbc-stripe) 20px,
+                transparent 20px,
+                transparent 40px
+            );
+        }
+
+        /* 品牌标题栏 */
+        .header {
+            height: 72px;
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            border-bottom: 3px solid var(--hsbc-red);
+            box-shadow: 0 2px 8px rgba(0,35,149,0.1);
+        }
+
+        .hsbc-logo {
+            width: 136px;
+            height: 32px;
+            background: url('https://www.hsbc.com.cn/content/dam/hsbc/cn/images/logos/13609-hsbc-masterbrand-sc-logo-svg.svg') no-repeat;
+            background-size: contain;
+            margin-right: 24px;
+        }
+
+        .title {
+            color: var(--hsbc-navy);
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        /* 主体布局 */
+        .main-container {
+            flex: 1;
+            display: flex;
+        }
+
+        /* 导航菜单 */
+        .nav-panel {
+            width: 240px;
+            background: rgba(255,255,255,0.95);
+            border-right: 1px solid #dee2e6;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 14px 24px;
+            margin: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #4D4D4D;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            background: rgba(219,0,17,0.08);
+        }
+
+        .nav-item.active {
+            background: var(--hsbc-red);
+            color: white;
+            box-shadow: 0 2px 6px rgba(219,0,17,0.2);
+        }
+
+        /* 标签页系统 */
+        .tab-container {
+            flex: 1;
+            background: white;
+            position: relative;
+        }
+
+        .tab-bar {
+            height: 40px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            border-bottom: 1px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .tab {
+            position: relative;
+            min-width: 160px;
+            height: 32px;
+            background: #dee2e6;
+            border: 1px solid #dee2e6;
+            border-radius: 6px 6px 0 0;
+            margin-right: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px 0 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab.active {
+            border-bottom-color: white;
+            border-top: 2px solid var(--hsbc-red);
+            background-color: #FFFFFF;
+        }
+
+        .tab-close {
+            position: absolute;
+            right: 8px;
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+
+        /* 内容区域 */
+        .content-area {
+            height: calc(100vh - 112px);
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        /* 新增iframe样式 */
+        .tab-content iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            display: block;
+        }
+
+        /* 优化内容区域布局 */
+        .content-area {
+            position: relative;
+            height: calc(100vh - 112px);
+            padding: 0 !important; /* 移除内边距 */
+        }
+
+        .tab-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        .tab-content iframe { 
+            border: 0px;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="hsbc-logo"></div>
+        <h1 class="title">Smart Insurance Rule Designer - Prototype</h1>
+    </header>
+
+    <div class="main-container">
+        <nav class="nav-panel">
+            <div class="nav-item" url="PermissionManager/ind

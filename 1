@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSBC智能核保系统 - 角色权限管理</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --hsbc-red: #DB0011;
+            --hsbc-navy: #002395;
+            --hsbc-stripe: rgba(219,0,17,0.05);
+        }
+
+        /* 品牌标题栏 */
+        .header {
+            height: 72px;
+            background: white;
+            border-bottom: 3px solid var(--hsbc-red);
+            box-shadow: 0 2px 8px rgba(0,35,149,0.1);
+        }
+
+        /* 权限树样式 */
+        .permission-tree {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        /* 用户选择 */
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .selected-user {
+            background-color: #e8f5e9 !important;
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            .nav-panel {
+                width: 180px;
+            }
+            .tab {
+                min-width: 120px;
+            }
+        }
+
+        /* 表格样式 */
+        .role-table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .status-enabled { background-color: #e8f5e9; color: #2e7d32; }
+        .status-disabled { background-color: #f5f5f5; color: #666; }
+        /* 已关联用户样式 */
+    .linked-user {
+        background-color: #f0f8ff !important; /* HSBC品牌蓝色调 */
+        border-left: 3px solid var(--hsbc-red);
+    }
+    
+    /* 临时选中样式 */
+    .selected-user {
+        background-color: #e8f5e9 !important;
+        box-shadow: inset 0 0 0 2px var(--hsbc-red);
+    }
+
+    /* 禁用已关联用户交互 */
+    .linked-user {
+        pointer-events: none;
+        opacity: 0.8;
+    }
+    .user-section {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .section-title {
+        background: #f8f9fa;
+        padding: 0.75rem;
+        border-bottom: 2px solid var(--hsbc-red);
+    }
+    .linked-section .list-group-item {
+        opacity: 0.8;
+        pointer-events: none; /* 禁用已关联用户交互[5](@ref) */
+    }
+    </style>
+</head>
+<body>
+     
+
+    <div class="main-container">
+        
+
+        <div class="tab-container">
+           
+            
+            <!-- 主内容区域 -->
+            <div class="content-area">
+                <div class="container-fluid py-4">
+                    <!-- 操作工具栏 -->
+                    <div class="d-flex justify-content-between mb-4">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                                <i class="bi bi-plus-lg"></i> 新建角色
+                            </button>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-secondary" id="batchEnable">批量启用</button>
+                                <button class="btn btn-outline-secondary" id="batchDisable">批量禁用</button>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2" style="width: 400px;">
+                            <input type="text" class="form-control" placeholder="搜索角色名称..." id="searchInput">
+                            <select class="form-select" style="width: 140px;" id="statusFilter">
+                                <option value="all">全部状态</option>
+                                <option value="enabled">启用中</option>
+                                <option value="disabled">已停用</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 角色列表 -->
+                    <table class="table table-hover role-table">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width: 30px;">
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th scope="col">角色名称</th>
+                                <th scope="col">状态</th>
+                                <th scope="col">权限数量</th>
+                                <th scope="col">关联用户</th>
+                                <th scope="col">最后修改</th>
+                                <th scope="col">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roleList">
+                            <tr data-id="1">
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>系统管理员 <span class="badge bg-secondary">系统内置</span></td>
+                                <td><span class="status-badge status-enabled">启用中</span></td>
+                                <td>98项</td>
+                                <td>5人</td>
+                                <td>2025-04-23 09:12</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-link p-0" onclick="editRole(1)">编辑</button>
+                                        <button class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#permissionModal">权限配置</button>
+                                        <button class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#userModal">关联用户</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 新建角色模态框 -->
+                    <div class="modal fade" id="createModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">新建角色</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form id="roleForm">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">角色名称</label>
+                                            <input type="text" class="form-control" name="roleName" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">权限模板</label>
+                                                <select class="form-select" name="template">
+                                                    <option value="">-- 选择模板 --</option>
+                                                    <option value="admin">系统管理员</option>
+                                                    <option value="auditor">审计员</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">初始状态</label>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="status" value="enabled" checked>
+                                                    <label class="form-check-label">启用</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="status" value="disabled">
+                                                    <label class="form-check-label">禁用</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                        <button type="submit" class="btn btn-primary">创建角色</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限配置模态框 -->
+                    <div class="modal fade" id="permissionModal" tabindex="-1">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">权限配置 - 系统管理员</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row g-4">
+                                        <div class="col-md-8">
+                                            <div class="permission-tree">
+                                                <div class="permission-category">
+                                                    <h6>核保管理 <small class="text-muted">(已选择 8/12)</small></h6>
+                                                    <div class="ms-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="perm1" checked>
+                                                            <label class="form-check-label" for="perm1">健康告知审核</label>
+                                                        </div>
+                                                        <!-- 更多权限项... -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card shadow-sm">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">权限统计</h6>
+                                                    <ul class="list-unstyled mb-4">
+                                                        <li>页面权限：<span class="text-primary">42项</span></li>
+                                                        <li>操作权限：<span class="text-primary">35项</span></li>
+                                                        <li>数据权限：<span class="text-primary">21项</span></li>
+                                                    </ul>
+                                                    <button class="btn btn-outline-primary w-100">继承模板权限</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                    <button type="button" class="btn btn-primary">保存配置</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 修改后的用户关联模态框 -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">用户管理 - 系统管理员</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 搜索栏 -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="搜索用户..." 
+                               id="userSearch" onkeyup="filterUsers()">
+                    </div>
+                </div>
+
+                <!-- 已关联用户区块 -->
+                <div class="user-section linked-section">
+                    <div class="section-title text-success">
+                        <i class="bi bi-check-circle-fill"></i> 已关联用户（3人）
+                    </div>
+                    <div class="list-group" id="linkedUsers">
+                        <!-- 已关联用户示例 -->
+                        <div class="list-group-item d-flex align-items-center">
+                            <img src="https://randomuser.me/api/portraits/men/1.jpg" class="user-avatar">
+                            <div>
+                                <h6 class="mb-0">王伟 <small class="text-muted">wangwei@hsbc.com</small></h6>
+                                <small class="text-muted">风险管理部 | 最后登录：2025-04-22</small>
+                            </div>
+                            <div class="ms-auto">
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="removeLink(this)">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 未关联用户区块 -->
+                <div class="user-section">
+                    <div class="section-title text-primary">
+                        <i class="bi bi-person-plus-fill"></i> 未关联用户（12人）
+                    </div>
+                    <div class="list-group" id="unlinkedUsers">
+                        <!-- 未关联用户示例 -->
+                        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center"
+                           onclick="addLink(this)">
+                            <img src="https://randomuser.me/api/portraits/women/2.jpg" class="user-avatar">
+                            <div>
+                                <h6 class="mb-0">李娜 <small class="text-muted">lina@hsbc.com</small></h6>
+                                <small class="text-muted">核保中心 | 最后登录：2025-04-23</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 表格筛选功能
+        function filterRoles() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase()
+            const statusFilter = document.getElementById('statusFilter').value
+            
+            document.querySelectorAll('#roleList tr').forEach(row => {
+                const name = row.cells[1].textContent.toLowerCase()
+                const status = row.cells[2].textContent.includes('启用') ? 'enabled' : 'disabled'
+                const matchSearch = name.includes(searchText)
+                const matchStatus = statusFilter === 'all' || status === statusFilter
+                
+                row.style.display = (matchSearch && matchStatus) ? '' : 'none'
+            })
+        }
+
+        // 事件监听
+        document.getElementById('searchInput').addEventListener('input', filterRoles)
+        document.getElementById('statusFilter').addEventListener('change', filterRoles)
+        
+        // 批量操作
+        document.getElementById('batchEnable').addEventListener('click', () => {
+            const selected = Array.from(document.querySelectorAll('#roleList input:checked'))
+            selected.forEach(checkbox => {
+                const row = checkbox.closest('tr')
+                row.querySelector('.status-badge').className = 'status-badge status-enabled'
+                row.querySelector('.status-badge').textContent = '启用中'
+            })
+        })
+
+        // 用户选择交互
+        document.querySelectorAll('#userModal .list-group-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault()
+                this.classList.toggle('selected-user')
+            })
+        })
+
+        // 全选/取消全选
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('#roleList .form-check-input')
+            checkboxes.forEach(checkbox => checkbox.checked = this.checked)
+        })
+    </script>
+</body>
+</html>
